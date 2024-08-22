@@ -1,0 +1,111 @@
+# Windows 11 Desktop Navigation DSL
+
+# Virtual Desktop Actions
+virtual_desktop:
+  switch_to:
+    by_name: 
+      action: switch_to_named_desktop
+      params:
+        name: string  # Name of the virtual desktop
+  switch_relative:
+    action: switch_desktop_relative
+    params:
+      direction: 
+        type: enum
+        values: [next, previous]
+  create:
+    action: create_new_desktop
+  close:
+    action: close_current_desktop
+
+# Application Focus Actions
+application:
+  switch_to:
+    action: focus_application
+    params:
+      name: string  # Name of the application
+  launch:
+    action: launch_application
+    params:
+      name: string  # Name of the application to launch
+
+# Window Management Actions
+window:
+  minimize:
+    action: minimize_window
+  maximize:
+    action: maximize_window
+  restore:
+    action: restore_window
+  close:
+    action: close_window
+
+# Microsoft Edge Specific Actions
+edge_browser:
+  switch_tab:
+    action: switch_to_tab
+    params:
+      index: integer  # Index of the tab (1-based)
+  new_tab:
+    action: open_new_tab
+  close_tab:
+    action: close_current_tab
+  navigate:
+    action: navigate_to_url
+    params:
+      url: string  # URL to navigate to
+
+# Task View Actions
+task_view:
+  open:
+    action: open_task_view
+  close:
+    action: close_task_view
+
+# Start Menu Actions
+start_menu:
+  open:
+    action: open_start_menu
+  close:
+    action: close_start_menu
+
+# Search Actions
+search:
+  open:
+    action: open_search
+  execute:
+    action: execute_search
+    params:
+      query: string  # Search query
+
+# System Actions
+system:
+  lock:
+    action: lock_system
+  sleep:
+    action: put_system_to_sleep
+  shutdown:
+    action: shutdown_system
+  restart:
+    action: restart_system
+
+# Keyboard Shortcuts
+keyboard:
+  send_keys:
+    action: send_keyboard_shortcut
+    params:
+      keys: string  # Keyboard shortcut (e.g., "ctrl+c", "win+d")
+
+# Mouse Actions
+mouse:
+  move:
+    action: move_mouse
+    params:
+      x: integer  # X coordinate
+      y: integer  # Y coordinate
+  click:
+    action: mouse_click
+    params:
+      button:
+        type: enum
+        values: [left, right, middle]
