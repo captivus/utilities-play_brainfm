@@ -41,6 +41,29 @@ Switch-EdgeTab -tabTitle "TabTitle"
 - VirtualDesktop module
 - Windows 11 OS
 
+# Running from Elgato Stream Deck
+To run this script from the Elgato Stream Deck, you can follow these steps:
+
+1. **Open Elgato Stream Deck Software:**
+   - Launch the Elgato Stream Deck software on your computer.
+
+2. **Create a New Button:**
+   - Find an empty button slot on your Stream Deck and click on it.
+
+3. **Assign the System Command:**
+   - In the right pane, under the "System" category, drag the "Open" action to the empty button slot.
+
+4. **Configure the Action:**
+    - Find the PowerShell executable. It is typically in `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
+    - Add the path to the script to the "App / File" field, as follows:  
+    ```powershell
+    "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -File "<PATH TO SCRIPT>\play_brainfm.ps1"
+    ```
+    - Optionally, add the `brainfm_logo.jpg` image to the button to make it more visually appealing.
+
+5. **Test the Button:**
+   - Press the button on your Stream Deck to ensure it executes the PowerShell script as expected.
+
 ## Limitations
 - Relies on keyboard shortcuts, which may be affected by Edge updates
 - Timing of operations may need adjustment based on system performance
