@@ -56,11 +56,11 @@ To run this script from the Elgato Stream Deck, you can follow these steps:
 4. **Configure the Action:**
     - Find the PowerShell executable. It is typically in `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
     - Add the path to the script to the "App / File" field, as follows:
-    - 
+
     ```powershell
     "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -ExecutionPolicy Bypass -File "<PATH TO SCRIPT>\play_brainfm.ps1"
     ```
-    
+
     - Optionally, add the `brainfm_logo.jpg` image to the button to make it more visually appealing.
 
 5. **Test the Button:**
