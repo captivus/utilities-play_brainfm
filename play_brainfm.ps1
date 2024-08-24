@@ -149,20 +149,11 @@ function Switch-EdgeTab {
     }
 }
 
-<#
-.SYNOPSIS
-Gets the current virtual desktop object.
-
-.EXAMPLE
-$currentDesktop = Get-CurrentDesktopObject
-#>
-function Get-CurrentDesktopObject {
-    return Get-CurrentDesktop
-}
-
 # Main execution
 try {
-    $originalDesktop = Get-CurrentDesktopObject
+    $originalDesktop = Get-CurrentDesktop
+    $originalDesktopName = Get-DesktopName
+
     Write-DebugMessage "Starting from desktop number: $($originalDesktop.Number)"
 
     Switch-ToNamedDesktop -name "Media"
@@ -184,13 +175,13 @@ try {
     }
 
     Switch-Desktop -Desktop $originalDesktop
-    Write-DebugMessage "Returned to original desktop number: $($originalDesktop.Number)"
+    Write-DebugMessage "Returned to original desktop: $($originalDesktopName)"
 } catch {
     Write-DebugMessage "An error occurred: $_"
 } finally {
     try {
         Switch-Desktop -Desktop $originalDesktop
-        Write-DebugMessage "Returned to original desktop number: $($originalDesktop.Number)"
+        Write-DebugMessage "Returned to original desktop: $($originalDesktopName)"
     } catch {
         Write-DebugMessage "Failed to return to original desktop: $_"
     }
