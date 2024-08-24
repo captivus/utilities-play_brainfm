@@ -1,15 +1,33 @@
-<#
-.SYNOPSIS
-Automates playing Brain.fm in Microsoft Edge on a specific virtual desktop.
+param(
+    [switch]$Debug = $false,
+    [switch]$Help = $false
+)
 
-.DESCRIPTION
-This script navigates to a named virtual desktop, focuses on Microsoft Edge,
-switches to the Brain.fm tab, and starts playback. It uses the VirtualDesktop
-module and Windows API calls for desktop and window management.
+# Add this function at the beginning of the script
+function Show-Help {
+    Write-Host @"
+Usage: .\play_brainfm.ps1 [-Debug] [-Help]
 
-.NOTES
-Requires the VirtualDesktop module to be installed.
-#>
+This script automates playing Brain.fm in Microsoft Edge on a specific virtual desktop.
+
+Parameters:
+  -Debug    Run the script in debug mode, providing detailed output.
+  -Help     Display this help message.
+
+Examples:
+  .\play_brainfm.ps1
+  .\play_brainfm.ps1 -Debug
+  .\play_brainfm.ps1 -Help
+
+Note: This script requires the VirtualDesktop module to be installed.
+"@
+    exit
+}
+
+# Check if help is requested
+if ($Help) {
+    Show-Help
+}
 
 # Import the VirtualDesktop module
 # Must be installed as admin by running "Install-Module VirtualDesktop -Scope CurrentUser"
@@ -32,6 +50,14 @@ public class User32 {
 }
 "@
 
+# Add this function for debug output
+function Write-DebugMessage {
+    param([string]$Message)
+    if ($Debug) {
+        Write-Host "DEBUG: $Message" -ForegroundColor Cyan
+    }
+}
+
 <#
 .SYNOPSIS
 Switches to a named virtual desktop.
@@ -49,13 +75,13 @@ function Switch-ToNamedDesktop {
     if ($targetDesktop) {
         try {
             Switch-Desktop -Desktop $targetDesktop.Number
-            Write-Host "Switched to virtual desktop: $name"
+            Write-DebugMessage "Switched to virtual desktop: $name"
         } catch {
-            Write-Host "Error switching to desktop: $_"
+            Write-DebugMessage "Error switching to desktop: $_"
         }
     } else {
-        Write-Host "Virtual desktop '$name' not found."
-        Write-Host "Available desktops: $($desktops | ForEach-Object { $_.Name } | Join-String -Separator ', ')"
+        Write-DebugMessage "Virtual desktop '$name' not found."
+        Write-DebugMessage "Available desktops: $($desktops | ForEach-Object { $_.Name } | Join-String -Separator ', ')"
     }
 }
 
@@ -72,18 +98,20 @@ Set-ApplicationFocus -name "Edge"
 function Set-ApplicationFocus {
     param([string]$name)
     $processes = Get-Process | Where-Object { $_.MainWindowTitle -ne "" }
-    Write-Host "Searching for application with name containing '$name'"
-    Write-Host "Running processes with non-empty window titles:"
-    $processes | ForEach-Object { Write-Host "  - $($_.ProcessName): $($_.MainWindowTitle)" }
+    Write-DebugMessage "Searching for application with name containing '$name'"
+    Write-DebugMessage "Running processes with non-empty window titles:"
+    if ($Debug) {
+        $processes | ForEach-Object { Write-DebugMessage "  - $($_.ProcessName): $($_.MainWindowTitle)" }
+    }
     
     $app = $processes | Where-Object { $_.ProcessName -like "*$name*" -or $_.MainWindowTitle -like "*$name*" } | Select-Object -First 1
     if ($app) {
         [User32]::ShowWindow($app.MainWindowHandle, 9) # 9 = SW_RESTORE
         [User32]::SetForegroundWindow($app.MainWindowHandle)
-        Write-Host "Set focus on application: $($app.ProcessName) (Window Title: $($app.MainWindowTitle))"
+        Write-DebugMessage "Set focus on application: $($app.ProcessName) (Window Title: $($app.MainWindowTitle))"
         return $true
     } else {
-        Write-Host "Application with name containing '$name' not found."
+        Write-DebugMessage "Application with name containing '$name' not found."
         return $false
     }
 }
@@ -99,58 +127,76 @@ The title of the tab to switch to.
 Switch-EdgeTab -tabTitle "brain.fm"
 #>
 function Switch-EdgeTab {
-    param(
-        [string]$tabTitle
-    )
+    param([string]$tabTitle)
     $edge = Get-Process | Where-Object { $_.ProcessName -eq "msedge" -and $_.MainWindowTitle -ne "" } | Select-Object -First 1
     if ($edge) {
-        # Activate the Edge window
         [User32]::ShowWindow($edge.MainWindowHandle, 9) # 9 = SW_RESTORE
         [User32]::SetForegroundWindow($edge.MainWindowHandle)
-        Write-Host "Activated Edge window: $($edge.MainWindowTitle)"
+        Write-DebugMessage "Activated Edge window: $($edge.MainWindowTitle)"
         
-        # Use correct keyboard shortcut to search tabs
         $wshell = New-Object -ComObject wscript.shell
-        $wshell.SendKeys("^+a")  # Ctrl+Shift+A to open tab search
-        Start-Sleep -Milliseconds 500  # Wait for search to open
+        $wshell.SendKeys("^+a")
+        Start-Sleep -Milliseconds 500
         $wshell.SendKeys($tabTitle)
-        Start-Sleep -Milliseconds 500  # Wait for search results
+        Start-Sleep -Milliseconds 500
         $wshell.SendKeys("{ENTER}")
         
-        Write-Host "Attempted to switch to tab '$tabTitle' in Edge"
+        Write-DebugMessage "Attempted to switch to tab '$tabTitle' in Edge"
         return $true
     } else {
-        Write-Host "No Edge window with a non-empty title found."
+        Write-DebugMessage "No Edge window with a non-empty title found."
         return $false
     }
 }
 
+<#
+.SYNOPSIS
+Gets the current virtual desktop object.
+
+.EXAMPLE
+$currentDesktop = Get-CurrentDesktopObject
+#>
+function Get-CurrentDesktopObject {
+    return Get-CurrentDesktop
+}
+
 # Main execution
 try {
-    # Switch to the "Media" virtual desktop
+    $originalDesktop = Get-CurrentDesktopObject
+    Write-DebugMessage "Starting from desktop number: $($originalDesktop.Number)"
+
     Switch-ToNamedDesktop -name "Media"
 
-    # Set focus on the Edge browser window
     $focusSuccess = Set-ApplicationFocus -name "Media"
 
-    # Only proceed if focus was successful
     if ($focusSuccess) {
-        # Switch to the tab with brain.fm
         $switchSuccess = Switch-EdgeTab -tabTitle "brain.fm"
         
         if ($switchSuccess) {
-            Write-Host "Navigation completed successfully."
-            # Wait for 0.5 seconds
+            Write-DebugMessage "Navigation completed successfully."
             Start-Sleep -Milliseconds 500
-            # Send a space key press to start playing Brain.fm
             [System.Windows.Forms.SendKeys]::SendWait(' ')
-
         } else {
-            Write-Host "Navigation partially completed. Failed to switch to the desired tab."
+            Write-DebugMessage "Navigation partially completed. Failed to switch to the desired tab."
         }
     } else {
-        Write-Host "Navigation failed. Could not focus on Microsoft Edge."
+        Write-DebugMessage "Navigation failed. Could not focus on Microsoft Edge."
     }
+
+    Switch-Desktop -Desktop $originalDesktop
+    Write-DebugMessage "Returned to original desktop number: $($originalDesktop.Number)"
 } catch {
-    Write-Host "An error occurred: $_"
+    Write-DebugMessage "An error occurred: $_"
+} finally {
+    try {
+        Switch-Desktop -Desktop $originalDesktop
+        Write-DebugMessage "Returned to original desktop number: $($originalDesktop.Number)"
+    } catch {
+        Write-DebugMessage "Failed to return to original desktop: $_"
+    }
+}
+
+# Add this at the end to provide a summary when not in debug mode
+if (-not $Debug) {
+    Write-Host "Brain.fm playback initiated successfully." -ForegroundColor Green
 }
