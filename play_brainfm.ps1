@@ -158,7 +158,7 @@ try {
 
     Switch-ToNamedDesktop -name "Media"
 
-    $focusSuccess = Set-ApplicationFocus -name "Media"
+    $focusSuccess = Set-ApplicationFocus -name "*Media"
 
     if ($focusSuccess) {
         $switchSuccess = Switch-EdgeTab -tabTitle "brain.fm"
