@@ -127,7 +127,7 @@ The title of the tab to switch to.
 Switch-EdgeTab -tabTitle "brain.fm"
 #>
 function Switch-EdgeTab {
-    param([string]$tabTitle)
+    param([string]$partialUrl)
     $edge = Get-Process | Where-Object { $_.ProcessName -eq "msedge" -and $_.MainWindowTitle -ne "" } | Select-Object -First 1
     if ($edge) {
         [User32]::ShowWindow($edge.MainWindowHandle, 9) # 9 = SW_RESTORE
@@ -135,13 +135,24 @@ function Switch-EdgeTab {
         Write-DebugMessage "Activated Edge window: $($edge.MainWindowTitle)"
         
         $wshell = New-Object -ComObject wscript.shell
-        $wshell.SendKeys("^+a")
-        Start-Sleep -Milliseconds 500
-        $wshell.SendKeys($tabTitle)
-        Start-Sleep -Milliseconds 500
+        #$wshell.SendKeys("^t")  # Ctrl+T to open a new tab
+        #Start-Sleep -Milliseconds 500
+        $wshell.SendKeys("^+a")  # Ctrl+Shift+A to open "Search tabs" dialog
+        Start-Sleep -Milliseconds 250
+        $wshell.SendKeys($partialUrl)
+        Start-Sleep -Milliseconds 250
+        
+        # Wait for a short time to see if any results appear
+        Start-Sleep -Milliseconds 250
+        
+        # Press Down arrow to select the first result (if any)
+        #$wshell.SendKeys("{DOWN}")
+        #Start-Sleep -Milliseconds 200
+        
+        # Press Enter to switch to the selected tab
         $wshell.SendKeys("{ENTER}")
         
-        Write-DebugMessage "Attempted to switch to tab '$tabTitle' in Edge"
+        Write-DebugMessage "Attempted to switch to tab containing '$partialUrl' in Edge"
         return $true
     } else {
         Write-DebugMessage "No Edge window with a non-empty title found."
@@ -154,28 +165,28 @@ try {
     $originalDesktop = Get-CurrentDesktop
     $originalDesktopName = Get-DesktopName
 
-    Write-DebugMessage "Starting from desktop number: $($originalDesktop.Number)"
+    Write-DebugMessage "Starting from desktop: $($originalDesktopName)"
 
     Switch-ToNamedDesktop -name "Media"
 
     $focusSuccess = Set-ApplicationFocus -name "*Media"
 
     if ($focusSuccess) {
-        $switchSuccess = Switch-EdgeTab -tabTitle "brain.fm"
+        $switchSuccess = Switch-EdgeTab -partialUrl "brain.fm"
         
         if ($switchSuccess) {
-            Write-DebugMessage "Navigation completed successfully."
-            Start-Sleep -Milliseconds 500
+            Write-DebugMessage "Tab switch completed successfully."
+            Start-Sleep -Milliseconds 1000
             [System.Windows.Forms.SendKeys]::SendWait(' ')
         } else {
-            Write-DebugMessage "Navigation partially completed. Failed to switch to the desired tab."
+            Write-DebugMessage "Tab switch may have failed. Could not find a tab with 'brain.fm' in the URL."
         }
     } else {
         Write-DebugMessage "Navigation failed. Could not focus on Microsoft Edge."
     }
 
-    Switch-Desktop -Desktop $originalDesktop
-    Write-DebugMessage "Returned to original desktop: $($originalDesktopName)"
+    # Switch-Desktop -Desktop $originalDesktop
+    # Write-DebugMessage "Returned to original desktop: $($originalDesktopName)"
 } catch {
     Write-DebugMessage "An error occurred: $_"
 } finally {
