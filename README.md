@@ -79,3 +79,6 @@ To run this script from the Elgato Stream Deck, you can follow these steps:
 - Ensure correct virtual desktop names
 - Verify Edge is running with the desired tabs open
 - Check console output for detailed operation logs
+
+# TODO
+* Package this as a shareable Stream Deck Action (available in v6.8.1)
